@@ -1,1 +1,0 @@
-#TODO: integrate google cloud translate api
