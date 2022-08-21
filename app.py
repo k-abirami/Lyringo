@@ -25,10 +25,10 @@ def redirectPage():
     code = request.args.get('code')
     token_info = sp_oauth.get_access_token(code)
     session[TOKEN_INFO] = token_info
-    return redirect(url_for('getTracks', _external = True))
+    return redirect(url_for('home', _external = True))
 
-@app.route("/getTracks")
-def getTracks():
+@app.route("/getPlaylists")
+def getPlaylists():
     try:
         token_info = get_token()
     except:
@@ -36,7 +36,18 @@ def getTracks():
         return redirect(url_for('login', _external = False))
     sp = spotipy.Spotify(auth=token_info['access_token'])
 
-    return sp.current_user_saved_tracks(limit=50, offset = 0)
+    user = sp.current_user()['id']
+    playlist_id = sp.user_playlists(user, limit=50, offset = 0)['items'][0]['uri'].split("spotify:playlist:")[1]
+    # playlist_data = sp.playlist_tracks(playlist_id, fields=None, limit=100, offset=0, market=None, additional_types=('track',))
+
+    playlist_link = "https://open.spotify.com/embed/playlist/" + playlist_id + "?utm_source=generator"
+    playlist_URI = playlist_link.split("/")[-1].split("?")[0]
+    song_list = [x["track"]["name"] for x in sp.playlist_tracks(playlist_URI)["items"]]
+    
+    playlist_data = [str(playlist_id), song_list]
+
+    return playlist_data
+
 
 def get_token():
     token_info = session.get(TOKEN_INFO, None)
@@ -56,12 +67,14 @@ def create_spotify_oauth():
         client_id=config_data['id'],
         client_secret=config_data['secret'],
         redirect_uri=url_for('redirectPage', _external = True),
-        scope = "user-library-read")
+        scope = "user-library-read user-read-playback-state")
     
 
 @app.route("/home")
 def home():
- return render_template("index.html")
+    playlist_id = getPlaylists()[0]
+    embed_url = "https://open.spotify.com/embed/playlist/" + playlist_id + "?utm_source=generator"
+    return render_template("index.html", url = embed_url)
 
 @app.route("/about")
 def about():
