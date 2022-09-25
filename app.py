@@ -43,14 +43,14 @@ def getPlaylists():
     playlist_link = "https://open.spotify.com/embed/playlist/" + playlist_id + "?utm_source=generator"
     playlist_names = playlist_link.split("/")[-1].split("?")[0]
     song_list = [x["track"]["name"] for x in sp.playlist_tracks(playlist_names)["items"]]
-    artist_list = [x["track"]["artists"] for x in sp.playlist_tracks(playlist_names)["items"]]
-    print(song_list)
-    # artist_ids = []
-    # for i in range(len(artist_list)):
-    #     print(artist_list[i]['id'])
-    # print(artist_ids)
+    artist_metadata_list = [x["track"]["artists"] for x in sp.playlist_tracks(playlist_names)["items"]]
 
-    playlist_data = [str(playlist_id), song_list]
+    artist_list = []
+    for x in range(len(artist_metadata_list)):
+        artist_list.append(artist_metadata_list[x][0]['name'])
+
+    song_data = dict(zip(artist_list, song_list))
+    playlist_data = [str(playlist_id), song_data]
 
     return playlist_data
 
